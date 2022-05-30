@@ -3,13 +3,8 @@ import { Buffer } from 'buffer';
 
 class AddressHelper {
 
-    getStakeAddress(address, testnet) {
-        if (address.startsWith('stake')) return address;
-        if (!address.startsWith('addr')) throw new Error('Invalid address');
-        
-        // Build base address
-        const addr = Address.from_bech32(address);
-        const baseAddr = BaseAddress.from_address(addr);
+    _getStakeAddress(address, testnet) {
+        const baseAddr = BaseAddress.from_address(address);
 
         // Extract stake credential               
         const stakeCred = baseAddr.stake_cred();
@@ -24,19 +19,72 @@ class AddressHelper {
         return stakeAddr;
     }
 
-    extractBech32(address, testnet) {
-        const sep = address.lastIndexOf('1');
-        if (sep < 0) throw new Error('Invalid Bech32 address');
-        const prefix = address.slice(0, sep);
-        const data = address.slice(sep);
-
-        // For now, just validate payment address -- the intent of this method is to validate bech32 and
-        // divide a Cardano address into its parts (prefix, network, header type, payment part, delegation part)
-        if (prefix !== 'addr' + (testnet ? '_test' : '')) throw new Error('Invalid output address');
+    extractBech32(address) {
         const addr = Address.from_bech32(address);
-        if (!addr) throw new Error('Invalid address');
-        return addr;
-        //const baseAddr = BaseAddress.from_address(addr);
+        if (!addr) throw new Error('Invalid Bech32 address');
+        const addrBytes = addr.to_bytes();
+
+        // Byron addresses start with 1000
+        if ((addrBytes[0] >> 4) === 0x08) {
+            return {
+                network: 'unknown', // TODO
+                era: 'byron',
+                walletAddress: address,
+                paymentPart: { type: null },
+                delegationPart: { type: null }
+            };
+        }
+
+        const network = ((addrBytes[0] & 0x01) === 0x01) ? 'mainnet' : 'testnet';
+        const headerType = (addrBytes[0] >> 4);
+
+        let paymentPart = { type: null };
+        let delegationPart = { type: null };
+        // Stake address if applicable, otherwise provided address
+        let walletAddress = address;
+        if (headerType === 0x00) {
+            paymentPart = { type: 'payment' };
+            delegationPart = { type: 'stake' };
+            walletAddress = this._getStakeAddress(addr, network === 'testnet');
+        } else if (headerType === 0x01) {
+            paymentPart = { type: 'script' };
+            delegationPart = { type: 'stake' };
+            walletAddress = this._getStakeAddress(addr, network === 'testnet');
+        } else if (headerType === 0x02) {
+            paymentPart = { type: 'payment' };
+            delegationPart = { type: 'script' };
+        } else if (headerType === 0x03) {
+            paymentPart = { type: 'script' };
+            delegationPart = { type: 'script' };
+        } else if (headerType === 0x04) {
+            paymentPart = { type: 'payment' };
+            delegationPart = { type: 'pointer' };
+        } else if (headerType === 0x05) {
+            paymentPart = { type: 'script' };
+            delegationPart = { type: 'pointer' };
+        } else if (headerType === 0x06) {
+            paymentPart = { type: 'payment' };
+            delegationPart = { type: null };
+        } else if (headerType === 0x07) {
+            paymentPart = { type: 'script' };
+            delegationPart = { type: null };
+        } else if (headerType === 0x0e) {
+            paymentPart = { type: null };
+            delegationPart = { type: 'stake' };
+        } else if (headerType === 0x0f) {
+            paymentPart = { type: null };
+            delegationPart = { type: 'script' };
+        } else {
+            throw new Error('Unknown address type');
+        }
+
+        return {
+            network: network,
+            era: 'shelley',
+            walletAddress: walletAddress,
+            paymentPart: paymentPart,
+            delegationPart: delegationPart
+        }
     }
 };
 

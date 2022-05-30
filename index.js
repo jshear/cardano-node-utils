@@ -40,22 +40,23 @@ const CardanoNodeUtils = (function(testnet, customLog) {
         return true;
     }
 
-    function getStakeAddress(address) {
+    function extractBech32(address) {
         try {
-            return serializationClient.addressHelper.getStakeAddress(address, state.testnet);
+            return serializationClient.addressHelper.extractBech32(address);
         } catch(err) {
-            log.error('Unable to determine stake address', err);
+            log.error(`Invalid Bech32 address (${address}):`, err.message || err);
             return null;
         }
     }
 
-    function extractBech32(address) {
+    function getStakeAddress(address) {
         try {
-            serializationClient.addressHelper.extractBech32(address, state.testnet);
-            return true;
+            const wallet = extractBech32(address);
+            if (wallet.delegationPart !== 'stake') throw new Error('Not a valid staking wallet');
+            return wallet.walletAddress;
         } catch(err) {
-            log.error('Invalid Bech32 output address');
-            return false;
+            log.error('Unable to determine stake address', err);
+            return null;
         }
     }
 

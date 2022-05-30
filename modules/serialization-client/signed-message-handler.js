@@ -1,4 +1,4 @@
-import { COSESign1, Label } from '../../node_modules_external/@emurgo/message-signing';
+import { COSESign1, Label } from '../../node_modules_external/@emurgo/message-signing/emurgo_message_signing.js';
 import { Address, Ed25519Signature, PublicKey, BaseAddress, StakeCredential } from '@emurgo/cardano-serialization-lib-nodejs';
 import { Buffer } from 'buffer';
 
