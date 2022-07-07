@@ -1,6 +1,6 @@
 {
   "name": "@jshear/cardano-node-utils",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A collection of utilities for development on the Cardano blockchain using Node.js",
   "repository": {
     "type": "git",

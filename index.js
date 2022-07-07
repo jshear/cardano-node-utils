@@ -25,7 +25,7 @@ const CardanoNodeUtils = (function(testnet, customLog) {
     state.blockfrostClient = null;
 
     function enableBlockfrost(projectId) {
-        state.blockfrostClient = new BlockfrostClient(state.cardanoUtils, blockfrostProjectId, state.testnet);
+        state.blockfrostClient = new BlockfrostClient(state.cardanoUtils, projectId, state.testnet);
     }
 
     function validateSignedMessage(message, address, payload) {
