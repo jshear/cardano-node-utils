@@ -52,7 +52,7 @@ const CardanoNodeUtils = (function(testnet, customLog) {
     function getStakeAddress(address) {
         try {
             const wallet = extractBech32(address);
-            if (wallet.delegationPart !== 'stake') throw new Error('Not a valid staking wallet');
+            if (wallet.delegationPart.type !== 'stake') throw new Error('Not a valid staking wallet');
             return wallet.walletAddress;
         } catch(err) {
             log.error('Unable to determine stake address', err);
