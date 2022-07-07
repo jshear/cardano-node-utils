@@ -110,6 +110,7 @@ const CardanoNodeUtils = (function(testnet, customLog) {
             extractBech32: extractBech32
         },
         blockfrost: {
+            enable: enableBlockfrost,
             getNFTAssetOwner: getNFTAssetOwner,
             getAssetOwners: getAssetOwners,
             getOwnedAssets: getOwnedAssets,
